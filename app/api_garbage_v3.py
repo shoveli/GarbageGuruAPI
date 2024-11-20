@@ -19,7 +19,7 @@ app = Flask(__name__)
 
 modelo = None
 try:
-    modelo = load_model('modelo_clasificador_inception_capas_descongeladas.h5')
+    modelo = load_model('app/modelo_clasificador_inception_capas_descongeladas.h5')
 except Exception as e:
     logging.error(f"Error al cargar el modelo: {str(e)}")
     raise RuntimeError("No se pudo cargar el modelo. Verifique los registros de errores para más detalles.")
