@@ -6,6 +6,9 @@ import base64
 import logging
 from io import BytesIO
 from PIL import Image
+import logging
+import requests
+import tempfile
 
 # Archivo de log por si tira algun error la api
 logging.basicConfig(filename='app.log', level=logging.ERROR, 
@@ -17,9 +20,25 @@ app = Flask(__name__)
 # En primeras versiones, no se controlaba el tema de si el modelo se cargaba bien o no
 # Por las dudas, agrego esa validacion, si no se carga el modelo, no inicia la api y escribo en el archivo log
 
+MODEL_URL = "https://github.com/shoveli/GarbageGuruAPI/raw/refs/heads/main/app/modelo_clasificador_inception_capas_descongeladas.h5"
+
 modelo = None
+
 try:
-    modelo = load_model('app/modelo_clasificador_inception_capas_descongeladas.h5')
+    # Descargar el modelo a un archivo temporal
+    logging.info("Descargando el modelo desde la URL...")
+    response = requests.get(MODEL_URL, stream=True)
+    response.raise_for_status()  # Verifica si la descarga fue exitosa
+    
+    # Crear un archivo temporal
+    with tempfile.NamedTemporaryFile(suffix=".h5") as temp_file:
+        temp_file.write(response.content)
+        temp_file.flush()  # Asegúrate de que los datos estén escritos
+        logging.info(f"Modelo descargado temporalmente en: {temp_file.name}")
+        
+        # Cargar el modelo desde el archivo temporal
+        modelo = load_model(temp_file.name)
+        logging.info("Modelo cargado correctamente.")
 except Exception as e:
     logging.error(f"Error al cargar el modelo: {str(e)}")
     raise RuntimeError("No se pudo cargar el modelo. Verifique los registros de errores para más detalles.")
